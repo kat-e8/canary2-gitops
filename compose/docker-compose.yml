@@ -1,0 +1,55 @@
+x-canary-common: &canary-common
+  CANARY_ENDPOINT_ENCRYPTION_KIND: SelfSignedCertificate
+  CANARY_IDENTITY_CLIENT_ENDPOINT_API: can-hist-dev.dala-cirius.ts.net
+  CANARY_IDENTITY_CLIENT_ENDPOINT_OIDC: can-hist-dev.dala-cirius.ts.net
+x-canary-volumes: &canary-volumes
+  - canary-config:/etc/opt/Canary
+  - canary-data:/var/opt/Canary
+services:
+  canary-administrator:
+    image: containers.canarylabs.com/canary-administrator:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    hostname: canary-administrator
+    environment:
+      <<: *canary-common
+      CANARY_ADMIN_SERVICE_ENDPOINT_IDENTITY: can-hist-dev.dala-cirius.ts.net
+      CANARY_ADMIN_SERVICE_ENDPOINT_STORE_AND_FORWARD: canary-store-and-forward
+      CANARY_ADMIN_SERVICE_ENDPOINT_OPC_COLLECTOR: canary-opc-collector
+    volumes: *canary-volumes
+    networks:
+      canary-net: { ipv4_address: 172.31.0.10 }
+    ports:
+      - "100.96.149.30:56273:55273"
+  canary-store-and-forward:
+    image: containers.canarylabs.com/canary-store-and-forward:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    hostname: canary-store-and-forward
+    environment: *canary-common
+    volumes: *canary-volumes
+    networks:
+      canary-net: { ipv4_address: 172.31.0.11 }
+    ports:
+      - "100.96.149.30:56291:55291"
+  canary-opc-collector:
+    image: containers.canarylabs.com/canary-opc-collector:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    hostname: canary-opc-collector
+    environment:
+      <<: *canary-common
+      CANARY_OPC_COLLECTOR_SAF_ENDPOINT: canary-store-and-forward
+    volumes: *canary-volumes
+    networks:
+      canary-net: { ipv4_address: 172.31.0.13 }
+    depends_on:
+      - canary-store-and-forward
+networks:
+  canary-net:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24
+volumes:
+  canary-config:
+  canary-data:
