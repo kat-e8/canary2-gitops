@@ -1,3 +1,4 @@
+name: canary2-gitops
 x-canary-common: &canary-common
   CANARY_ENDPOINT_ENCRYPTION_KIND: SelfSignedCertificate
   CANARY_IDENTITY_CLIENT_ENDPOINT_API: can-hist-dev.dala-cirius.ts.net
